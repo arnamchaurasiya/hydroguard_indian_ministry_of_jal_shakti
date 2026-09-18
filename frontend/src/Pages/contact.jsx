@@ -1,70 +1,86 @@
-import React from 'react';
-import styled from 'styled-components';
+import { Box, Paper, Typography, Chip, Stack } from '@mui/material';
+import { ContactSupport, Shield } from '@mui/icons-material';
 import DetailsBar from './detailsbar';
 import InputSide from './inputside';
 
-const PageWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  align-items: center;
-  background-color: #F4F7F9;
-  padding-left: 23vw;
-  padding-right: 2vw;
-  padding-top: 2vw;
-  padding-bottom: 50px;
-  box-sizing: border-box;
-  width: 100%;
-`;
-
-const PageHeadingWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin-top: 20px;
-  margin-bottom: 30px;
-`;
-
-const FormContainer = styled.div`
-  width: 90%;
-  max-width: 900px;
-  display: flex;
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  min-height: 60vh;
-  gap: 20px;
-  @media (max-width: 768px) {
-    flex-direction: column;
-    width: 100%;
-  }
-`;
-
-const TextOne = styled.b`
-  font-size: 30px;
-  color: rgb(4, 4, 59);
-  text-align: center;
-`;
-
-const TextTwo = styled.p`
-  color: rgb(4, 4, 34);
-  font-size: 15px;
-  text-align: center;
-`;
-
-const FormPage = () => {
+const ContactPage = () => {
   return (
-    <PageWrapper>
-      <PageHeadingWrapper>
-        <TextOne>Contact US</TextOne>
-        <TextTwo>Any Question or remarks? Just write us a message</TextTwo>
-      </PageHeadingWrapper>
-      <FormContainer>
-        <DetailsBar/>
-        <InputSide/>
-      </FormContainer>
-    </PageWrapper>
+    <div className="page-wrapper">
+      {/* Page Header Card */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2.5, sm: 3 },
+          mb: 3,
+          borderRadius: '16px',
+          bgcolor: '#FFFFFF',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05)',
+        }}
+      >
+        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
+          <Box>
+            <Stack direction="row" spacing={1} sx={{ mb: 1 }} flexWrap="wrap">
+              <Chip
+                icon={<ContactSupport sx={{ fontSize: '0.9rem !important', color: '#274C77 !important' }} />}
+                label="HydroGuard Helpdesk"
+                size="small"
+                sx={{
+                  bgcolor: 'rgba(39, 76, 119, 0.08)',
+                  color: '#274C77',
+                  fontWeight: 600,
+                  fontSize: '0.72rem',
+                }}
+              />
+              <Chip
+                icon={<Shield sx={{ fontSize: '0.9rem !important', color: '#6096BA !important' }} />}
+                label="Ministry of Jal Shakti Support"
+                size="small"
+                sx={{
+                  bgcolor: 'rgba(96, 150, 186, 0.12)',
+                  color: '#274C77',
+                  fontWeight: 600,
+                  fontSize: '0.72rem',
+                }}
+              />
+            </Stack>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: '#1B3B6F', letterSpacing: '-0.5px' }}>
+              Contact HydroGuard Technical Team
+            </Typography>
+          </Box>
+          <Chip
+            label="Response within 24 Hours"
+            color="primary"
+            variant="outlined"
+            sx={{ borderColor: '#274C77', color: '#274C77', fontWeight: 600 }}
+          />
+        </Stack>
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 1, maxWidth: 840 }}>
+          Have inquiries regarding dam sensor integration, telemetry access, or command-area crop model calibrations? Connect directly with our engineering and research coordinators.
+        </Typography>
+      </Paper>
+
+      {/* Unified Responsive Split Card */}
+      <Paper
+        elevation={0}
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', lg: '380px 1fr' },
+          borderRadius: '16px',
+          overflow: 'hidden',
+          bgcolor: '#FFFFFF',
+          boxShadow: '0 8px 32px rgba(27, 59, 111, 0.08)',
+          border: '1px solid #E2E8F0',
+        }}
+      >
+        {/* Left: Contact Info */}
+        <DetailsBar />
+
+        {/* Right: Contact Form */}
+        <InputSide />
+      </Paper>
+    </div>
   );
 };
 
-export default FormPage;
+export default ContactPage;

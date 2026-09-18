@@ -16,7 +16,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import './header.css';
 import Logo from '../assets/logoupadated.png';
 
-const pages = ['Home', 'Dashboard', 'Actions', 'Chatbot'];
+const pages = ['Home', 'Dashboard', 'Actions'];
 const settings = ['Logout'];
 
 function Header() {

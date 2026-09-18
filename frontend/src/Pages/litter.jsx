@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react';
 import axios from 'axios';
-import './litter.css'
+import './litter.css';
+import { Paper, Typography, Box, Button, Chip } from '@mui/material';
+import { Videocam, CameraAlt } from '@mui/icons-material';
+
 const Litter = () => {
   const videoRef = useRef(null);
-//   const [detection, setDetection] = useState(null);
 
   useEffect(() => {
     const startCamera = async () => {
@@ -32,14 +34,14 @@ const Litter = () => {
 
       try {
         const response = await axios.post('http://localhost:8080/detect', { image: imageData }, {
-          responseType: 'blob', // Expecting a video blob from the backend
+          responseType: 'blob',
         });
 
         const videoBlob = new Blob([response.data], { type: 'video/mp4' });
         const videoURL = URL.createObjectURL(videoBlob);
 
         if (videoRef.current) {
-          videoRef.current.srcObject = null; // Clear the current stream
+          videoRef.current.srcObject = null;
           videoRef.current.src = videoURL;
           videoRef.current.play();
         }
@@ -50,14 +52,67 @@ const Litter = () => {
   };
 
   return (
-    <div className='full' style={{ paddingLeft: '23vw', paddingRight: '22vw', paddingTop: '2vw', minHeight: '100vh', boxSizing: 'border-box' }}>
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        style={{ width: '100%', maxWidth: '700px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', marginTop: '20px' }}
-      ></video>
-       <button className="capture-button" onClick={captureFrame}>Capture and Detect</button>
+    <div className="page-wrapper">
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2.5, sm: 3.5 },
+          borderRadius: '16px',
+          bgcolor: '#FFFFFF',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 4px 20px rgba(27, 59, 111, 0.06)',
+          maxWidth: '800px',
+          mx: 'auto',
+          textAlign: 'center',
+        }}
+      >
+        <Chip
+          icon={<Videocam sx={{ fontSize: '0.85rem !important' }} />}
+          label="Computer Vision Module"
+          size="small"
+          sx={{ bgcolor: 'rgba(39, 76, 119, 0.08)', color: '#274C77', fontWeight: 700, mb: 1.5 }}
+        />
+        <Typography variant="h4" sx={{ fontWeight: 800, color: '#1B3B6F', mb: 1 }}>
+          Water Surface Litter & Debris Detection
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
+          Analyze optical camera feed to detect floating waste and sediment accumulation along canal channels.
+        </Typography>
+
+        <Box sx={{ position: 'relative', width: '100%', maxWidth: '640px', mx: 'auto', mb: 3 }}>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            style={{
+              width: '100%',
+              borderRadius: '14px',
+              backgroundColor: '#0F172A',
+              boxShadow: '0 8px 24px rgba(15, 23, 42, 0.15)',
+              display: 'block',
+            }}
+          />
+        </Box>
+
+        <Button
+          variant="contained"
+          size="large"
+          startIcon={<CameraAlt />}
+          onClick={captureFrame}
+          sx={{
+            bgcolor: '#1B3B6F',
+            '&:hover': { bgcolor: '#0B2545' },
+            px: 4,
+            py: 1.4,
+            borderRadius: '10px',
+            fontWeight: 700,
+            textTransform: 'none',
+            boxShadow: '0 4px 14px rgba(27, 59, 111, 0.25)',
+          }}
+        >
+          Capture and Detect Debris
+        </Button>
+      </Paper>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Box, Typography, Card, CardContent, Button, CircularProgress, TextField, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
+import { Box, Typography, Card, CardContent, Button, CircularProgress, TextField, MenuItem, Select, InputLabel, FormControl, Paper } from '@mui/material';
 
 const Cordinates = () => {
   const { coordinates } = useParams();
@@ -50,10 +50,9 @@ const Cordinates = () => {
   const handleProcessSubmit = async () => {
     try {
       setLoading(true);
-      // Construct process payload
       const processPayload = {
         token: data?.data?.token,
-        rain: parseFloat(rain), // Use the rain value from the state
+        rain: parseFloat(rain),
         crops: [
           {
             crop_type: cropType,
@@ -63,10 +62,6 @@ const Cordinates = () => {
         ]
       };
 
-      // Log the payload to ensure it's correct
-      console.log('Process Payload:', processPayload);
-
-      // Sending the request to /crops/process
       const processResponse = await axios.post('http://127.0.0.1:8080/crops/process', processPayload, {
         headers: {
           'Content-Type': 'application/json'
@@ -84,56 +79,41 @@ const Cordinates = () => {
 
   if (error) {
     return (
-      <Box sx={{ padding: 2 }}>
-        <Typography variant="h6" color="error">
-          Error: {error?.response?.data?.message || error.message}
-        </Typography>
-      </Box>
+      <div className="page-wrapper">
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', bgcolor: '#FFFFFF' }}>
+          <Typography variant="h6" color="error">
+            Error: {error?.response?.data?.message || error.message}
+          </Typography>
+        </Paper>
+      </div>
     );
   }
 
   return (
-    <Box sx={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      width: '50vw',
-      flexDirection: 'column',
-      overflowY: 'auto',
-      padding: 2,
-      margin: '0 auto',
-    }}>
-      <Box sx={{ width: '100%', padding: 2 }}>
-        <Typography variant="h4" sx={{ color: '#274C77', marginBottom: 3, textAlign: 'center' }}>
+    <div className="page-wrapper">
+      <Paper elevation={0} sx={{ p: { xs: 2.5, sm: 3.5 }, borderRadius: '16px', bgcolor: '#FFFFFF', maxWidth: '800px', mx: 'auto' }}>
+        <Typography variant="h4" sx={{ color: '#1B3B6F', fontWeight: 800, mb: 3, textAlign: 'center' }}>
           Coordinate Analysis Results
         </Typography>
 
         {loading && !processData ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <CircularProgress sx={{ color: '#274C77' }} />
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 6 }}>
+            <CircularProgress sx={{ color: '#1B3B6F' }} />
           </Box>
         ) : (
           <>
             {data && (
-              <Card sx={{ boxShadow: 3, borderRadius: 2, padding: 3, marginBottom: 2 }}>
+              <Card sx={{ boxShadow: 1, borderRadius: '12px', p: 2, mb: 3, bgcolor: '#F8FAFC' }}>
                 <CardContent>
-                  <Box >
-                    <Typography variant="body1" sx={{ color: '#274C77' }}>
-                      <strong>Area:</strong> {data.data?.area}
-                    </Typography>
-                    {/* <Typography variant="body1" sx={{ color: '#274C77',margin:'10px' }}>
-                      <strong>Token:</strong> {data.data?.token}
-                    </Typography>
-                     <Typography variant="body1" sx={{ color: '#274C77',margin:'10px' }}>
-                      This token Will 
-                    </Typography> */}
-                  </Box>
+                  <Typography variant="body1" sx={{ color: '#1B3B6F', fontWeight: 600 }}>
+                    <strong>Area:</strong> {data.data?.area}
+                  </Typography>
                 </CardContent>
               </Card>
             )}
 
-            <Box sx={{ marginBottom: 2 }}>
-              <FormControl fullWidth sx={{ marginBottom: 2 }}>
+            <Box sx={{ mb: 3 }}>
+              <FormControl fullWidth size="small" sx={{ mb: 2 }}>
                 <InputLabel id="crop-type-label">Crop Type</InputLabel>
                 <Select
                   labelId="crop-type-label"
@@ -152,7 +132,7 @@ const Cordinates = () => {
                 </Select>
               </FormControl>
 
-              <FormControl fullWidth sx={{ marginBottom: 2 }}>
+              <FormControl fullWidth size="small" sx={{ mb: 2 }}>
                 <InputLabel id="irrigation-type-label">Irrigation Type</InputLabel>
                 <Select
                   labelId="irrigation-type-label"
@@ -168,55 +148,52 @@ const Cordinates = () => {
 
               <TextField
                 fullWidth
+                size="small"
                 label="Land Cover"
                 type="number"
                 value={landCover}
                 onChange={(e) => setLandCover(e.target.value)}
-                sx={{ marginBottom: 2 }}
+                sx={{ mb: 2 }}
               />
 
               <TextField
                 fullWidth
+                size="small"
                 label="Rain (mm)"
                 type="number"
                 value={rain}
                 onChange={(e) => setRain(e.target.value)}
-                sx={{ marginBottom: 2 }}
+                sx={{ mb: 2 }}
               />
 
               <Button
                 variant="contained"
-                color="primary"
-                sx={{ padding: '10px 20px', borderRadius: 3, bgcolor: '#274C77' }}
+                sx={{ bgcolor: '#1B3B6F', '&:hover': { bgcolor: '#0B2545' }, borderRadius: '10px', py: 1.2, px: 3, fontWeight: 700, textTransform: 'none' }}
                 onClick={handleProcessSubmit}
               >
                 Submit
               </Button>
             </Box>
 
-            {/* Display results from /crops/process */}
             {processData && (
-              <Card sx={{ boxShadow: 3, borderRadius: 2, padding: 3 }}>
+              <Card sx={{ boxShadow: 1, borderRadius: '12px', p: 2, bgcolor: '#F8FAFC' }}>
                 <CardContent>
-                  <Typography variant="h6" sx={{ color: '#274C77', marginBottom: 2 }}>
+                  <Typography variant="h6" sx={{ color: '#1B3B6F', fontWeight: 700, mb: 2 }}>
                     Results from /crops/process:
                   </Typography>
 
-                  <Box sx={{ marginTop: 2 }}>
-                    <Typography variant="body1" sx={{ color: '#274C77' }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Typography variant="body2" sx={{ color: '#1B3B6F' }}>
                       <strong>Water Requirement:</strong> {processData.data?.crop_water_requirement}
                     </Typography>
-                    <Typography variant="body1" sx={{ color: '#274C77' }}>
+                    <Typography variant="body2" sx={{ color: '#1B3B6F' }}>
                       <strong>Water Configuration:</strong> {processData.data?.water_given_config}
                     </Typography>
-                    <Typography variant="body1" sx={{ color: '#274C77' }}>
+                    <Typography variant="body2" sx={{ color: '#1B3B6F' }}>
                       <strong>Optimal Water Usage:</strong> {processData.data?.optimal_water_usage}
                     </Typography>
-                    <Typography variant="body1" sx={{ color: '#274C77' }}>
+                    <Typography variant="body2" sx={{ color: '#1B3B6F' }}>
                       <strong>Suggestions:</strong> {processData.data?.suggestions}
-                    </Typography>
-                    <Typography variant="body1" sx={{ color: '#274C77' }}>
-                      <strong>Configuration Error:</strong> {processData.data?.config_errors}
                     </Typography>
                   </Box>
                 </CardContent>
@@ -226,15 +203,14 @@ const Cordinates = () => {
         )}
 
         <Button
-          variant="contained"
-          color="primary"
-          sx={{ marginTop: 3, padding: '10px 20px', borderRadius: 3, display: 'block', margin: '20px auto', bgcolor: '#274C77' }}
+          variant="outlined"
+          sx={{ mt: 3, borderRadius: '8px', color: '#1B3B6F', borderColor: '#CBD5E1', display: 'block', mx: 'auto', textTransform: 'none' }}
           onClick={() => window.history.back()}
         >
           Go Back
         </Button>
-      </Box>
-    </Box>
+      </Paper>
+    </div>
   );
 };
 

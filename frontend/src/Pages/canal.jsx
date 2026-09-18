@@ -1,7 +1,35 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { TextField, Button, Box, Typography, Paper, Grid2 as Grid, Card, CardContent, MenuItem, Select, InputLabel, FormControl, Chip, Alert, Divider } from '@mui/material';
-import { WaterDrop, Calculate, PieChart, CheckCircle, Warning, ArrowForward } from '@mui/icons-material';
+import {
+  TextField,
+  Button,
+  Box,
+  Typography,
+  Paper,
+  Card,
+  CardContent,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  Chip,
+  Alert,
+  Divider,
+  CircularProgress,
+  Stack,
+  LinearProgress,
+} from '@mui/material';
+import {
+  WaterDrop,
+  Calculate,
+  TrendingDown,
+  Opacity,
+  Shield,
+  Assessment,
+  Speed,
+  InfoOutlined,
+  CheckCircle,
+} from '@mui/icons-material';
 import { BarChart } from '@mui/x-charts/BarChart';
 
 const CanalForm = () => {
@@ -20,7 +48,7 @@ const CanalForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setCanalData({ ...canalData, [name]: value });
+    setCanalData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -47,7 +75,7 @@ const CanalForm = () => {
       setResponseData(response.data);
     } catch (error) {
       console.error('Error submitting canal data:', error);
-      setResponseData({ error: 'Failed to calculate canal losses. Check backend connection.' });
+      setResponseData({ error: 'Failed to calculate canal losses. Ensure the backend telemetry service is running.' });
     } finally {
       setLoading(false);
     }
@@ -58,226 +86,514 @@ const CanalForm = () => {
   const evaporationLoss = result?.evaporation_loss || 0;
   const totalLoss = result?.total_loss || (seepageLoss + evaporationLoss);
 
+  const seepagePct = totalLoss > 0 ? Math.round((seepageLoss / totalLoss) * 100) : 0;
+  const evapPct = totalLoss > 0 ? Math.round((evaporationLoss / totalLoss) * 100) : 0;
+
   return (
-    <Box sx={{ width: '100%', minHeight: '100vh', paddingLeft: '23vw', paddingRight: '22vw', paddingTop: '2vw', paddingBottom: '4vw', boxSizing: 'border-box', bgcolor: '#F4F7F9' }}>
-      
-      {/* Header */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: '16px', bgcolor: '#FFFFFF', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
-        <Chip label="Process Flow Track 2" color="primary" size="small" sx={{ bgcolor: '#274C77', fontWeight: 'bold', mb: 1 }} />
-        <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#274C77' }}>
-          Canal Loss Assessment
-        </Typography>
-        <Typography variant="body2" color="textSecondary">
-          Calculate Seepage Loss, Evaporation Loss, and Total Water Loss along canal networks.
+    <div className="page-wrapper">
+      {/* Page Header Card */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2.5, sm: 3 },
+          mb: 3,
+          borderRadius: '16px',
+          bgcolor: '#FFFFFF',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05)',
+        }}
+      >
+        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
+          <Box>
+            <Chip
+              icon={<WaterDrop sx={{ fontSize: '0.9rem !important' }} />}
+              label="Canal Telemetry & Hydraulics"
+              size="small"
+              sx={{
+                bgcolor: 'rgba(39, 76, 119, 0.08)',
+                color: '#274C77',
+                fontWeight: 600,
+                mb: 1,
+                fontSize: '0.72rem',
+              }}
+            />
+            <Typography variant="h4" sx={{ fontWeight: 800, color: '#1B3B6F', letterSpacing: '-0.5px' }}>
+              Canal Seepage & Evaporation Loss Assessment
+            </Typography>
+          </Box>
+          <Chip
+            label="Empirical Hydrology Model"
+            color="primary"
+            variant="outlined"
+            sx={{ borderColor: '#274C77', color: '#274C77', fontWeight: 600 }}
+          />
+        </Stack>
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 1, maxWidth: 840 }}>
+          Quantify conveyance water losses due to soil seepage and atmospheric evaporation along distribution canals. Compare unlined vs. concrete-lined canal performance to guide infrastructure investments.
         </Typography>
       </Paper>
 
-      <Grid container spacing={3}>
-        
-        {/* Step: Enter Parameters */}
-        <Grid size={{ xs: 12, md: 5 }}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', bgcolor: '#FFFFFF', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <WaterDrop sx={{ color: '#274C77', mr: 1 }} />
-              <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#274C77' }}>
-                Enter Parameters
-              </Typography>
+      {/* Balanced 2-Column Grid on Desktop, Single Column on Mobile */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', lg: 'minmax(320px, 0.85fr) minmax(420px, 1.15fr)' },
+          gap: 3,
+          alignItems: 'start',
+        }}
+      >
+        {/* Left Column: Input Parameters Form */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2.5, sm: 3.5 },
+            borderRadius: '16px',
+            bgcolor: '#FFFFFF',
+            border: '1px solid #E2E8F0',
+            boxShadow: '0 4px 16px rgba(27, 59, 111, 0.06)',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: '10px',
+                bgcolor: 'rgba(39, 76, 119, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#274C77',
+                mr: 1.5,
+              }}
+            >
+              <Calculate fontSize="small" />
             </Box>
-            <Divider sx={{ mb: 3 }} />
-
-            <form onSubmit={handleSubmit}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField
-                  fullWidth
-                  label="Seepage Rate / Coefficient (Qe)"
-                  name="qe"
-                  value={canalData.qe}
-                  onChange={handleChange}
-                  type="number"
-                  variant="outlined"
-                />
-
-                <TextField
-                  fullWidth
-                  label="Canal Width (m)"
-                  name="width"
-                  value={canalData.width}
-                  onChange={handleChange}
-                  type="number"
-                  variant="outlined"
-                />
-
-                <FormControl fullWidth>
-                  <InputLabel id="soil-type-label">Soil Type</InputLabel>
-                  <Select
-                    labelId="soil-type-label"
-                    name="soilType"
-                    value={canalData.soilType}
-                    onChange={handleChange}
-                    label="Soil Type"
-                  >
-                    <MenuItem value="Alluvial soil">Alluvial Soil (c=1.4)</MenuItem>
-                    <MenuItem value="Clay soil">Clay Soil (c=0.95)</MenuItem>
-                    <MenuItem value="Loam soil">Loam Soil (c=1.2)</MenuItem>
-                    <MenuItem value="Sandy soil">Sandy Soil (c=2.1)</MenuItem>
-                    <MenuItem value="Black cotton soil">Black Cotton Soil (c=1.1)</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <TextField
-                  fullWidth
-                  label="Canal Wetted Area (m²)"
-                  name="canalArea"
-                  value={canalData.canalArea}
-                  onChange={handleChange}
-                  type="number"
-                  variant="outlined"
-                />
-
-                <FormControl fullWidth>
-                  <InputLabel id="canal-type-label">Canal Lining Type</InputLabel>
-                  <Select
-                    labelId="canal-type-label"
-                    name="canalType"
-                    value={canalData.canalType}
-                    onChange={handleChange}
-                    label="Canal Lining Type"
-                  >
-                    <MenuItem value="unlined">Unlined Earthen Canal (High Seepage)</MenuItem>
-                    <MenuItem value="lined">Concrete Lined Canal (Medium Seepage)</MenuItem>
-                    <MenuItem value="piped">Enclosed Pipe Conveyance (Minimal Loss)</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <TextField
-                  fullWidth
-                  label="Canal Depth (m)"
-                  name="canalDepth"
-                  value={canalData.canalDepth}
-                  onChange={handleChange}
-                  type="number"
-                  variant="outlined"
-                />
-
-                <TextField
-                  fullWidth
-                  label="Canal Length (km)"
-                  name="canalLength"
-                  value={canalData.canalLength}
-                  onChange={handleChange}
-                  type="number"
-                  variant="outlined"
-                />
-
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  size="large"
-                  startIcon={<Calculate />}
-                  endIcon={<ArrowForward />}
-                  disabled={loading}
-                  sx={{ bgcolor: '#274C77', '&:hover': { bgcolor: '#1D3859' }, py: 1.5, borderRadius: '10px', fontWeight: 'bold', mt: 1 }}
-                >
-                  {loading ? 'Calculating Losses...' : 'Enter ↵ & Analyze Losses'}
-                </Button>
-              </Box>
-            </form>
-          </Paper>
-        </Grid>
-
-        {/* Step: Analyze Losses */}
-        <Grid size={{ xs: 12, md: 7 }}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', bgcolor: '#FFFFFF', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', height: '100%' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <PieChart sx={{ color: '#274C77', mr: 1 }} />
-              <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#274C77' }}>
-                Analyze Losses
+            <div>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1B3B6F', lineHeight: 1.2 }}>
+                Canal Parameters
               </Typography>
-            </Box>
-            <Divider sx={{ mb: 3 }} />
+              <Typography variant="caption" color="textSecondary">
+                Enter geometric dimensions and soil characteristics
+              </Typography>
+            </div>
+          </Box>
 
-            {responseData?.error ? (
-              <Alert severity="error">{responseData.error}</Alert>
-            ) : responseData ? (
+          <Divider sx={{ mb: 2.5 }} />
+
+          <form onSubmit={handleSubmit}>
+            <Stack spacing={2.5}>
+              {/* Group 1: Canal Dimensions */}
               <Box>
-                {/* Metric Summary Cards */}
-                <Grid container spacing={2} sx={{ mb: 3 }}>
-                  <Grid size={{ xs: 12, sm: 4 }}>
-                    <Card variant="outlined" sx={{ borderRadius: '12px', bgcolor: '#FAFCFE' }}>
-                      <CardContent sx={{ p: 2 }}>
-                        <Typography variant="caption" color="textSecondary">Seepage Loss</Typography>
-                        <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#D97706', my: 0.5 }}>
-                          {seepageLoss.toFixed(1)} m³
-                        </Typography>
-                        <Chip label="Soil Seepage" size="small" variant="outlined" color="warning" />
-                      </CardContent>
-                    </Card>
-                  </Grid>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    color: '#274C77',
+                    letterSpacing: '0.5px',
+                    display: 'block',
+                    mb: 1.5,
+                  }}
+                >
+                  1. Geometric Dimensions
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                  <TextField
+                    fullWidth
+                    required
+                    label="Canal Width"
+                    name="width"
+                    value={canalData.width}
+                    onChange={handleChange}
+                    type="number"
+                    variant="outlined"
+                    size="small"
+                    helperText="Bed width in meters (m)"
+                    slotProps={{ htmlInput: { step: '0.1', min: '0.1' } }}
+                  />
 
-                  <Grid size={{ xs: 12, sm: 4 }}>
-                    <Card variant="outlined" sx={{ borderRadius: '12px', bgcolor: '#FAFCFE' }}>
-                      <CardContent sx={{ p: 2 }}>
-                        <Typography variant="caption" color="textSecondary">Evaporation Loss</Typography>
-                        <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#0284C7', my: 0.5 }}>
-                          {evaporationLoss.toFixed(1)} m³
-                        </Typography>
-                        <Chip label="Atmospheric Loss" size="small" variant="outlined" color="info" />
-                      </CardContent>
-                    </Card>
-                  </Grid>
+                  <TextField
+                    fullWidth
+                    required
+                    label="Canal Depth"
+                    name="canalDepth"
+                    value={canalData.canalDepth}
+                    onChange={handleChange}
+                    type="number"
+                    variant="outlined"
+                    size="small"
+                    helperText="Water depth in meters (m)"
+                    slotProps={{ htmlInput: { step: '0.1', min: '0.1' } }}
+                  />
 
-                  <Grid size={{ xs: 12, sm: 4 }}>
-                    <Card variant="outlined" sx={{ borderRadius: '12px', bgcolor: '#FAFCFE' }}>
-                      <CardContent sx={{ p: 2 }}>
-                        <Typography variant="caption" color="textSecondary">Total Water Loss</Typography>
-                        <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#DC2626', my: 0.5 }}>
-                          {totalLoss.toFixed(1)} m³
-                        </Typography>
-                        <Chip label="Combined Loss" size="small" color="error" />
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                </Grid>
+                  <TextField
+                    fullWidth
+                    required
+                    label="Canal Length"
+                    name="canalLength"
+                    value={canalData.canalLength}
+                    onChange={handleChange}
+                    type="number"
+                    variant="outlined"
+                    size="small"
+                    helperText="Reach length in kilometers (km)"
+                    slotProps={{ htmlInput: { step: '0.1', min: '0.1' } }}
+                  />
 
-                {/* Loss Breakdown Bar Chart */}
-                <Box sx={{ p: 2, border: '1px solid #E2E8F0', borderRadius: '12px', bgcolor: '#FAFCFE', mb: 3 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#274C77', mb: 1 }}>
-                    Canal Loss Breakdown Chart (m³)
-                  </Typography>
-                  <Box sx={{ height: 250, width: '100%' }}>
-                    <BarChart
-                      xAxis={[{ scaleType: 'band', data: ['Seepage Loss', 'Evaporation Loss', 'Total Water Loss'] }]}
-                      series={[{ data: [seepageLoss, evaporationLoss, totalLoss], color: '#274C77' }]}
-                      height={240}
+                  <TextField
+                    fullWidth
+                    required
+                    label="Wetted Surface Area"
+                    name="canalArea"
+                    value={canalData.canalArea}
+                    onChange={handleChange}
+                    type="number"
+                    variant="outlined"
+                    size="small"
+                    helperText="Cross-sectional area (m²)"
+                    slotProps={{ htmlInput: { step: '0.5', min: '1' } }}
+                  />
+                </Box>
+              </Box>
+
+              <Divider />
+
+              {/* Group 2: Soil & Lining */}
+              <Box>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    color: '#274C77',
+                    letterSpacing: '0.5px',
+                    display: 'block',
+                    mb: 1.5,
+                  }}
+                >
+                  2. Soil & Lining Specifications
+                </Typography>
+                <Stack spacing={2}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel id="soil-type-label">Soil Classification</InputLabel>
+                    <Select
+                      labelId="soil-type-label"
+                      name="soilType"
+                      value={canalData.soilType}
+                      onChange={handleChange}
+                      label="Soil Classification"
+                    >
+                      <MenuItem value="Alluvial soil">Alluvial Soil (c = 1.4 m/day)</MenuItem>
+                      <MenuItem value="Clay soil">Clay Soil (c = 0.95 m/day - Low Porosity)</MenuItem>
+                      <MenuItem value="Loam soil">Loam Soil (c = 1.2 m/day - Moderate)</MenuItem>
+                      <MenuItem value="Sandy soil">Sandy Soil (c = 2.1 m/day - High Seepage)</MenuItem>
+                      <MenuItem value="Black cotton soil">Black Cotton Soil (c = 1.1 m/day)</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                    <TextField
+                      fullWidth
+                      required
+                      label="Seepage Coefficient (Qe)"
+                      name="qe"
+                      value={canalData.qe}
+                      onChange={handleChange}
+                      type="number"
+                      variant="outlined"
+                      size="small"
+                      helperText="Loss rate coeff (m³/s/Mm²)"
+                      slotProps={{ htmlInput: { step: '0.05', min: '0.1' } }}
+                    />
+
+                    <FormControl fullWidth size="small">
+                      <InputLabel id="canal-type-label">Canal Lining Type</InputLabel>
+                      <Select
+                        labelId="canal-type-label"
+                        name="canalType"
+                        value={canalData.canalType}
+                        onChange={handleChange}
+                        label="Canal Lining Type"
+                      >
+                        <MenuItem value="unlined">Unlined Earthen Canal</MenuItem>
+                        <MenuItem value="lined">Concrete Lined Canal</MenuItem>
+                        <MenuItem value="piped">Enclosed Pipe Conveyance</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
+                </Stack>
+              </Box>
+
+              {/* Primary Action Button */}
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                size="large"
+                disabled={loading}
+                startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <Calculate />}
+                sx={{
+                  bgcolor: '#1B3B6F',
+                  '&:hover': { bgcolor: '#0B2545' },
+                  py: 1.5,
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  fontSize: '1rem',
+                  textTransform: 'none',
+                  boxShadow: '0 4px 14px rgba(27, 59, 111, 0.25)',
+                  mt: 1,
+                }}
+              >
+                {loading ? 'Calculating Losses...' : 'Enter ↵ & Analyze Losses'}
+              </Button>
+            </Stack>
+          </form>
+        </Paper>
+
+        {/* Right Column: Analysis & Results */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2.5, sm: 3.5 },
+            borderRadius: '16px',
+            bgcolor: '#FFFFFF',
+            border: '1px solid #E2E8F0',
+            boxShadow: '0 4px 16px rgba(27, 59, 111, 0.06)',
+            minHeight: '480px',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box
+                sx={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '10px',
+                  bgcolor: 'rgba(2, 132, 199, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#0284C7',
+                  mr: 1.5,
+                }}
+              >
+                <Assessment fontSize="small" />
+              </Box>
+              <div>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1B3B6F', lineHeight: 1.2 }}>
+                  Loss Analysis & Recommendations
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  Breakdown of infiltration and evaporative depletion
+                </Typography>
+              </div>
+            </Box>
+
+            {responseData && !responseData.error && (
+              <Chip
+                icon={<CheckCircle sx={{ fontSize: '0.85rem !important' }} />}
+                label="Analysis Ready"
+                size="small"
+                color="success"
+                variant="outlined"
+              />
+            )}
+          </Box>
+
+          <Divider sx={{ mb: 2.5 }} />
+
+          {responseData?.error ? (
+            <Alert severity="error" sx={{ borderRadius: '10px' }}>
+              {responseData.error}
+            </Alert>
+          ) : responseData ? (
+            <Box>
+              {/* Primary Total Water Loss Banner Card */}
+              <Box
+                sx={{
+                  p: 3,
+                  mb: 3,
+                  borderRadius: '14px',
+                  background: 'linear-gradient(135deg, #1B3B6F 0%, #274C77 100%)',
+                  color: '#FFFFFF',
+                  boxShadow: '0 6px 20px rgba(27, 59, 111, 0.25)',
+                }}
+              >
+                <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.75)', textTransform: 'uppercase', letterSpacing: '0.8px', fontWeight: 600 }}>
+                      Total Estimated Water Loss
+                    </Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 800, color: '#FFFFFF', my: 0.5 }}>
+                      {totalLoss.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} <span style={{ fontSize: '1.2rem', fontWeight: 500 }}>m³</span>
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.85)' }}>
+                      Combined seepage infiltration & surface evaporation along the {canalData.canalLength} km reach.
+                    </Typography>
+                  </Box>
+                  <Box sx={{ textAlign: { xs: 'left', sm: 'right' } }}>
+                    <Chip
+                      label={canalData.canalType === 'unlined' ? 'High Loss Rate' : 'Controlled Loss'}
+                      sx={{
+                        bgcolor: canalData.canalType === 'unlined' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(16, 185, 129, 0.25)',
+                        color: '#FFFFFF',
+                        fontWeight: 700,
+                      }}
                     />
                   </Box>
+                </Stack>
+              </Box>
+
+              {/* Breakdown Metric Sub-Cards */}
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mb: 3 }}>
+                <Card variant="outlined" sx={{ borderRadius: '12px', bgcolor: '#F8FAFC', borderColor: '#E2E8F0' }}>
+                  <CardContent sx={{ p: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>
+                        Seepage Loss
+                      </Typography>
+                      <TrendingDown sx={{ color: '#D97706', fontSize: 18 }} />
+                    </Box>
+                    <Typography variant="h5" sx={{ fontWeight: 800, color: '#D97706' }}>
+                      {seepageLoss.toFixed(1)} m³
+                    </Typography>
+                    <Box sx={{ mt: 1 }}>
+                      <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
+                        <Typography variant="caption" color="textSecondary">Share of Total</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 700, color: '#D97706' }}>{seepagePct}%</Typography>
+                      </Stack>
+                      <LinearProgress variant="determinate" value={seepagePct} sx={{ height: 6, borderRadius: 3, bgcolor: '#FEF3C7', '& .MuiLinearProgress-bar': { bgcolor: '#D97706' } }} />
+                    </Box>
+                  </CardContent>
+                </Card>
+
+                <Card variant="outlined" sx={{ borderRadius: '12px', bgcolor: '#F8FAFC', borderColor: '#E2E8F0' }}>
+                  <CardContent sx={{ p: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>
+                        Evaporation Loss
+                      </Typography>
+                      <Opacity sx={{ color: '#0284C7', fontSize: 18 }} />
+                    </Box>
+                    <Typography variant="h5" sx={{ fontWeight: 800, color: '#0284C7' }}>
+                      {evaporationLoss.toFixed(1)} m³
+                    </Typography>
+                    <Box sx={{ mt: 1 }}>
+                      <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
+                        <Typography variant="caption" color="textSecondary">Share of Total</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 700, color: '#0284C7' }}>{evapPct}%</Typography>
+                      </Stack>
+                      <LinearProgress variant="determinate" value={evapPct} sx={{ height: 6, borderRadius: 3, bgcolor: '#E0F2FE', '& .MuiLinearProgress-bar': { bgcolor: '#0284C7' } }} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Box>
+
+              {/* Bar Chart Visualization */}
+              <Box sx={{ p: 2, border: '1px solid #E2E8F0', borderRadius: '12px', bgcolor: '#FAFCFE', mb: 3 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1B3B6F', mb: 1 }}>
+                  Loss Proportion Comparison (m³)
+                </Typography>
+                <Box sx={{ height: 230, width: '100%' }}>
+                  <BarChart
+                    xAxis={[{ scaleType: 'band', data: ['Seepage Loss', 'Evaporation', 'Total Loss'] }]}
+                    series={[{ data: [seepageLoss, evaporationLoss, totalLoss], color: '#274C77' }]}
+                    height={220}
+                  />
+                </Box>
+              </Box>
+
+              {/* Engineering Insights & Policy Recommendations */}
+              <Alert
+                severity={canalData.canalType === 'unlined' ? 'warning' : 'success'}
+                icon={canalData.canalType === 'unlined' ? <InfoOutlined /> : <Shield />}
+                sx={{ borderRadius: '12px', border: '1px solid', borderColor: canalData.canalType === 'unlined' ? '#FDE68A' : '#BBF7D0' }}
+              >
+                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                  Infrastructure Efficiency Insight:
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                  {canalData.canalType === 'unlined'
+                    ? `This reach is currently UNLINED in ${canalData.soilType}. Converting to concrete lining can prevent up to ${(seepageLoss * 0.65).toFixed(1)} m³ of water loss per cycle, recovering significant volume for command area farmers.`
+                    : `This canal utilizes lining technology. Continuing periodic joint-seal maintenance will keep seepage mitigation above 85% efficiency.`}
+                </Typography>
+              </Alert>
+            </Box>
+          ) : (
+            /* Rich Empty State */
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                py: { xs: 4, md: 7 },
+                px: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: '20px',
+                  bgcolor: 'rgba(39, 76, 119, 0.08)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#274C77',
+                  mb: 2,
+                }}
+              >
+                <WaterDrop sx={{ fontSize: 36 }} />
+              </Box>
+
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1B3B6F', mb: 1 }}>
+                Awaiting Canal Parameters
+              </Typography>
+              <Typography variant="body2" color="textSecondary" sx={{ maxWidth: 440, mb: 3 }}>
+                Enter your canal dimensions, soil type, and lining status on the left, then click <strong>"Enter ↵ & Analyze Losses"</strong> to generate the hydrological loss breakdown.
+              </Typography>
+
+              {/* What will be calculated previews */}
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 1.5, width: '100%', maxWidth: 500 }}>
+                <Box sx={{ p: 1.5, bgcolor: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
+                  <TrendingDown sx={{ color: '#D97706', fontSize: 20, mb: 0.5 }} />
+                  <Typography variant="caption" sx={{ display: 'block', fontWeight: 700, color: '#1B3B6F' }}>
+                    Seepage
+                  </Typography>
+                  <Typography variant="caption" color="textSecondary">
+                    Soil permeability
+                  </Typography>
                 </Box>
 
-                {/* Recommendations */}
-                <Alert severity={canalData.canalType === 'unlined' ? 'warning' : 'success'} sx={{ borderRadius: '10px' }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>Canal Efficiency Insight:</Typography>
-                  {canalData.canalType === 'unlined' ? (
-                    'This canal is currently UNLINED. Upgrading to a concrete lined canal or piped distribution can reduce seepage losses by up to 66%, saving significant volume for agriculture.'
-                  ) : (
-                    'This canal utilizes lining/piping. Maintaining seal integrity ensures maximum conveyance efficiency.'
-                  )}
-                </Alert>
-              </Box>
-            ) : (
-              <Box sx={{ textAlign: 'center', py: 6 }}>
-                <Typography color="textSecondary" sx={{ mb: 2 }}>
-                  Enter canal parameters on the left and click <strong>"Enter ↵ & Analyze Losses"</strong> to generate loss breakdown.
-                </Typography>
-              </Box>
-            )}
-          </Paper>
-        </Grid>
+                <Box sx={{ p: 1.5, bgcolor: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
+                  <Opacity sx={{ color: '#0284C7', fontSize: 20, mb: 0.5 }} />
+                  <Typography variant="caption" sx={{ display: 'block', fontWeight: 700, color: '#1B3B6F' }}>
+                    Evaporation
+                  </Typography>
+                  <Typography variant="caption" color="textSecondary">
+                    Surface loss
+                  </Typography>
+                </Box>
 
-      </Grid>
-    </Box>
+                <Box sx={{ p: 1.5, bgcolor: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
+                  <Speed sx={{ color: '#10B981', fontSize: 20, mb: 0.5 }} />
+                  <Typography variant="caption" sx={{ display: 'block', fontWeight: 700, color: '#1B3B6F' }}>
+                    Efficiency
+                  </Typography>
+                  <Typography variant="caption" color="textSecondary">
+                    Lining impact
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          )}
+        </Paper>
+      </Box>
+    </div>
   );
 };
 
 export default CanalForm;
-

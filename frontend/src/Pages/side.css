@@ -1,57 +1,153 @@
+/* Modern HydroGuard Sidebar & Mobile Header Styling */
 
-.drawer-paper {
-    width: 22vw; 
-    /* box-sizing: border-box; */
-    /* position: fixed; */
-    height: 100vh; 
-    overflow-y: auto; 
-    background-color: #274C77; 
-    color: #ffffff; 
-    z-index: 2;
-  }
-  
-  .opt .MuiListItem-root:hover {
-    background-color: #274C77; 
-    color: white;
-    border-radius: 10px;
-   
-    
-  }
- 
-  .link {
-    text-decoration: none; 
-    color: inherit; 
-  }
-  
-  .link:hover .MuiListItemText-root {
-    color: #fdfeff; 
-  }
-  
-  .link:hover .MuiSvgIcon-root {
-    color: #fdfeff 
-  }
-  
-  .opt .MuiListItem-root {
-    transition: background-color 0.3s ease; 
-  }
-  
-  
-  .drawer-footer {
-    position: absolute;
-    bottom: 16px;
-    left: 16px;
-    color: #030303; 
-    z-index: -1;
-  }
-  .sidebar-logo {
-    width: 120px;
-    height: 90px; 
-    margin:0 35px; 
-    display: block;
-    z-index: -1;
-    /* margin-top: 20px;  */
-  }
-  .opt
-  {
-    color:#274C77
-  }
+.desktop-sidebar {
+  width: var(--hg-sidebar-width, 260px);
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #FFFFFF;
+  border-right: 1px solid var(--hg-border-light, #E2E8F0);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 100;
+  box-shadow: 2px 0 12px rgba(15, 23, 42, 0.03);
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  padding: 24px 20px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.sidebar-logo {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  margin-bottom: 10px;
+  transition: transform var(--hg-transition-normal);
+}
+
+.sidebar-logo:hover {
+  transform: scale(1.03);
+}
+
+.sidebar-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #274C77;
+  background: rgba(39, 76, 119, 0.08);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.sidebar-nav {
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  color: #475569;
+  font-weight: 500;
+  font-size: 0.93rem;
+  text-decoration: none;
+  transition: all var(--hg-transition-fast);
+  min-height: 46px;
+}
+
+.nav-item:hover {
+  background-color: #F1F5F9;
+  color: #1B3B6F;
+  transform: translateX(3px);
+}
+
+.nav-item.active {
+  background-color: rgba(39, 76, 119, 0.1);
+  color: #1B3B6F;
+  font-weight: 700;
+}
+
+.nav-item.active .nav-icon {
+  color: #274C77;
+}
+
+.nav-icon {
+  font-size: 1.35rem !important;
+  color: #64748B;
+  transition: color var(--hg-transition-fast);
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #F1F5F9;
+  text-align: center;
+  background-color: #FAFCFE;
+}
+
+.sidebar-footer-text {
+  font-size: 0.75rem;
+  color: #64748B;
+  line-height: 1.4;
+}
+
+/* Mobile Header (displayed on screens < 1024px) */
+.mobile-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--hg-mobile-header-height, 64px);
+  background-color: #FFFFFF;
+  border-bottom: 1px solid var(--hg-border-light, #E2E8F0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 999;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.mobile-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.mobile-logo {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+}
+
+.mobile-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1B3B6F;
+  letter-spacing: -0.3px;
+}
+
+/* Mobile Drawer */
+.mobile-drawer-content {
+  width: 280px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #FFFFFF;
+}

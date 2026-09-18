@@ -1,4 +1,3 @@
-import * as React from 'react';
 import PropTypes from 'prop-types';
 import { useTheme } from '@mui/material/styles';
 import Card from '@mui/material/Card';
@@ -6,6 +5,7 @@ import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
+import Box from '@mui/material/Box';
 import { LineChart } from '@mui/x-charts/LineChart';
 
 function AreaGradient({ color, id }) {
@@ -24,25 +24,9 @@ AreaGradient.propTypes = {
   id: PropTypes.string.isRequired,
 };
 
-function getDaysInMonth(month, year) {
-  const date = new Date(year, month, 0);
-  const monthName = date.toLocaleDateString('en-US', {
-    month: 'short',
-  });
-  const daysInMonth = date.getDate();
-  const days = [];
-  let i = 1;
-  while (days.length < daysInMonth) {
-    days.push(`${monthName} ${i}`);
-    i += 1;
-  }
-  return days;
-}
-
 export default function SessionsChart(props) {
   const theme = useTheme();
-  const data = getDaysInMonth(4, 2024);
-  const { d, order, w, h, title, caption } = props;
+  const { d, order, h = 170, title, caption } = props;
 
   const colorPalette = [
     theme.palette.primary.light,
@@ -50,75 +34,82 @@ export default function SessionsChart(props) {
     theme.palette.primary.dark,
   ];
 
+  const lastValue = d && d.length > 0 ? d[d.length - 1] : 0;
+  const firstValue = d && d.length > 0 ? d[0] : 0;
+  const pctChange = lastValue > 0 ? ((Math.abs(firstValue - lastValue) / lastValue) * 100).toFixed(1) : '0.0';
+
   return (
-    <Card variant="outlined" sx={{ width: w }}>
-      <CardContent>
-        <Typography component="h2" variant="subtitle2" gutterBottom>
+    <Card
+      variant="outlined"
+      sx={{
+        width: '100%',
+        borderRadius: '12px',
+        borderColor: '#E2E8F0',
+        boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)',
+      }}
+    >
+      <CardContent sx={{ p: 2.5 }}>
+        <Typography component="h3" variant="subtitle2" sx={{ fontWeight: 700, color: '#1B3B6F', mb: 1 }}>
           {title}
         </Typography>
-        <Stack sx={{ justifyContent: 'space-between' }}>
-          <Stack
-            direction="row"
+
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: '#1B3B6F', lineHeight: 1 }}>
+              {typeof lastValue === 'number' ? lastValue.toFixed(2) : lastValue}
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#64748B', display: 'block', mt: 0.5 }}>
+              {caption}
+            </Typography>
+          </Box>
+
+          <Chip
+            size="small"
+            color="success"
+            label={`${firstValue <= lastValue ? '+' : '-'}${pctChange}%`}
+            sx={{ fontWeight: 700, fontSize: '0.75rem' }}
+          />
+        </Stack>
+
+        <Box sx={{ width: '100%', height: h, minWidth: 0 }}>
+          <LineChart
+            colors={colorPalette}
+            series={[
+              {
+                id: 'direct',
+                label: title,
+                showMark: false,
+                curve: 'linear',
+                stack: 'total',
+                area: true,
+                stackOrder: order,
+                data: d || [],
+              },
+            ]}
+            height={h}
+            margin={{ left: 45, right: 15, top: 15, bottom: 20 }}
+            grid={{ horizontal: true }}
             sx={{
-              alignContent: { xs: 'center', sm: 'flex-start' },
-              alignItems: 'center',
-              gap: 1,
+              '& .MuiAreaElement-series-direct': {
+                fill: "url('#direct')",
+              },
+            }}
+            slotProps={{
+              legend: { hidden: true },
             }}
           >
-            <Typography variant="h4" component="p">
-              {d[d.length-1].toFixed(2)}
-            </Typography>
-            <Chip size="small" color="success" label={"+" + (Math.abs(d[0] - d[d.length - 1]) / d[d.length - 1]).toFixed(2)} />
-          </Stack>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            {caption}
-          </Typography>
-        </Stack>
-        <LineChart
-          colors={colorPalette}
-          // xAxis={[
-          //   {
-          //     scaleType: 'point',
-          //     tickInterval: (index, i) => (i + 1) % 5 === 0,
-          //   },
-          // ]}
-          series={[
-            {
-              id: 'direct',
-              label: 'Direct',
-              showMark: false,
-              curve: 'linear',
-              stack: 'total',
-              area: true,
-              stackOrder: order,
-              data: d,
-            },
-          ]}
-          height={h}
-          margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
-          grid={{ horizontal: true }}
-          sx={{
-            '& .MuiAreaElement-series-organic': {
-              fill: "url('#organic')",
-            },
-            '& .MuiAreaElement-series-referral': {
-              fill: "url('#referral')",
-            },
-            '& .MuiAreaElement-series-direct': {
-              fill: "url('#direct')",
-            },
-          }}
-          slotProps={{
-            legend: {
-              hidden: true,
-            },
-          }}
-        >
-          <AreaGradient color={theme.palette.primary.dark} id="organic" />
-          <AreaGradient color={theme.palette.primary.main} id="referral" />
-          <AreaGradient color={theme.palette.primary.light} id="direct" />
-        </LineChart>
+            <AreaGradient color={theme.palette.primary.main} id="direct" />
+          </LineChart>
+        </Box>
       </CardContent>
     </Card>
   );
 }
+
+SessionsChart.propTypes = {
+  d: PropTypes.array,
+  order: PropTypes.string,
+  h: PropTypes.number,
+  title: PropTypes.string,
+  caption: PropTypes.string,
+};

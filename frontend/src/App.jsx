@@ -1,20 +1,18 @@
-import Sidebar from './Pages/sidebar';
 import Map from './Pages/gui.jsx';  
-import MyChatBot from './components/chatbot.jsx';
 import './App.css';
 import { createBrowserRouter, RouterProvider, useRouteError, Link } from 'react-router-dom';
-import Header from './Pages/header.jsx'
-import Home from './Pages/home.jsx'
-import Int from './Pages/interface.jsx'
-import Sign from './Pages/signin.jsx'
-import Right from './Pages/right.jsx'
-import Dam from './Pages/dam.jsx'
-import Litter from './Pages/litter.jsx'
-import Prediction from './Pages/prediction.jsx'
-import Cords from './Pages/cordinates'
+import AppLayout from './components/AppLayout.jsx';
+import Header from './Pages/header.jsx';
+import Home from './Pages/home.jsx';
+import Int from './Pages/interface.jsx';
+import Sign from './Pages/signin.jsx';
+import Dam from './Pages/dam.jsx';
+import Litter from './Pages/litter.jsx';
+import Prediction from './Pages/prediction.jsx';
+import Cords from './Pages/cordinates';
 import ContactUsForm from './Pages/contact.jsx';
-import Cordid from './Pages/cordid.jsx'
-import Canal from './Pages/canal.jsx'
+import Cordid from './Pages/cordid.jsx';
+import Canal from './Pages/canal.jsx';
 import { Box, Typography, Button } from '@mui/material';
 
 function ErrorFallback() {
@@ -41,67 +39,69 @@ function App() {
       path: '/',
       errorElement: <ErrorFallback />,
       element: (
-        <> <Sidebar/> <Map/> <Right/> <MyChatBot/></>
+        <AppLayout><Map /></AppLayout>
+      ),
+    },
+    {
+      path: '/home',
+      element: (
+        <AppLayout><Home /></AppLayout>
       ),
     },
     {
       path: '/contact',
       element: (
-        <> <Sidebar/> <ContactUsForm/> </>
+        <AppLayout><ContactUsForm /></AppLayout>
       ),
     },
     {
       path: '/canal',
       element: (
-        <> <Sidebar/><Canal/><Right/> </>
-      ),
-    },
-    {
-      path: '/litter',
-      element: (
-        <><Sidebar/> <Litter/><Right/> </>
+        <AppLayout><Canal /></AppLayout>
       ),
     },
     {
       path: '/dam/:damId',
       element: (
-        <> <Sidebar/> <Dam/><Right/> <MyChatBot/></>
+        <AppLayout><Dam /></AppLayout>
       ),
     },
     {
-      path:'/header',
-      element: <Header/>
+      path: '/cordid/:damId',
+      element: (
+        <AppLayout><Cordid /></AppLayout>
+      ),
     },
     {
-      path:'/prediction',
-      element: <><Sidebar/><Prediction/><Right/><MyChatBot/></>
+      path: '/polygon/:coordinates',
+      element: (
+        <AppLayout><Cords /></AppLayout>
+      ),
     },
     {
-      path:'/right',
-      element: <Right/>
+      path: '/litter',
+      element: (
+        <AppLayout><Litter /></AppLayout>
+      ),
     },
     {
-      path:'/polygon/:coordinates',
-      element: <><Sidebar/><Cords/><Right/> <MyChatBot/></>
+      path: '/prediction',
+      element: (
+        <AppLayout><Prediction /></AppLayout>
+      ),
     },
     {
-      path:'/cordid/:damId',
-      element: <><Sidebar/><Cordid/><Right/> <MyChatBot/></>
+      path: '/header',
+      element: <Header />
     },
     {
-      path:'/home',
-      element: <><Sidebar/><Home/> </>
-
+      path: '/interface',
+      element: <Int /> 
     },
     {
-      path:'/interface',
-      element: <Int/> 
-    },
-    {
-      path:'/signin',
-      element: <Sign/>
+      path: '/signin',
+      element: <Sign />
     }
-    
   ]);
 
   return <RouterProvider router={router} />;

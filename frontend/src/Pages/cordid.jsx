@@ -1,21 +1,54 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Box, Typography, Card, CardContent, Button, CircularProgress, TextField, MenuItem, Select, InputLabel, FormControl, Paper, Divider, Chip, IconButton } from '@mui/material';
-import { Agriculture, WaterDrop, Search, Add, Delete, ArrowBack } from '@mui/icons-material';
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Button,
+  CircularProgress,
+  TextField,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  Paper,
+  Divider,
+  Chip,
+  IconButton,
+  Stack,
+  Alert,
+} from '@mui/material';
+import {
+  Agriculture,
+  WaterDrop,
+  Add,
+  Delete,
+  ArrowBack,
+  Compare,
+  CheckCircle,
+  Warning,
+} from '@mui/icons-material';
+import { BarChart } from '@mui/x-charts/BarChart';
 
 const Cordinates = () => {
   const { damId } = useParams();
   const navigate = useNavigate();
+  const balanceSectionRef = useRef(null);
   const [data, setData] = useState(null);
+  const [damInfo, setDamInfo] = useState(null);
   const [processData, setProcessData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [crops, setCrops] = useState([{
-    crop_type: 'wheat',
-    irrigation_type: 'drip',
-    land_cover: '1.0'
-  }]);
+  const [processing, setProcessing] = useState(false);
+  const [crops, setCrops] = useState([
+    {
+      crop_type: 'wheat',
+      irrigation_type: 'drip',
+      land_cover: '1.0',
+    },
+  ]);
   const [rain, setRain] = useState('120');
 
   useEffect(() => {
@@ -23,11 +56,29 @@ const Cordinates = () => {
       try {
         setLoading(true);
         const initResponse = await axios.post('http://127.0.0.1:8080/crops/init', {
-          dam_id: Number(damId)
+          dam_id: Number(damId),
         });
         setData(initResponse.data);
+
+        // Fetch dam volume & metadata for water balance comparison
+        try {
+          const damResponse = await axios.get(`http://127.0.0.1:8080/dam/${damId}`);
+          const analysisResponse = await axios.get(`http://127.0.0.1:8080/dam/analysis/${damId}`);
+          const volumes = analysisResponse.data?.data?.map((i) => i.live_volume);
+          setDamInfo({
+            name: damResponse.data?.data?.name,
+            grossVolume: damResponse.data?.data?.gross_volume,
+            liveVolumeM3: volumes && volumes.length > 0 ? volumes[0] * 1000 : (damResponse.data?.data?.gross_volume || 5000000),
+          });
+        } catch (metaErr) {
+          console.log('Could not load dam metadata', metaErr);
+          setDamInfo({
+            name: `Dam #${damId}`,
+            liveVolumeM3: 5000000,
+          });
+        }
       } catch (err) {
-        console.error("Error initiating crop calculation:", err);
+        console.error('Error initiating crop calculation:', err);
         setError(err);
       } finally {
         setLoading(false);
@@ -41,34 +92,42 @@ const Cordinates = () => {
 
   const handleProcessSubmit = async () => {
     try {
-      setLoading(true);
+      setProcessing(true);
       const processPayload = {
         token: data?.data?.token || '760',
         rain: parseFloat(rain) || 120,
-        crops: crops.map(crop => ({
+        crops: crops.map((crop) => ({
           crop_type: crop.crop_type,
           irrigation_type: crop.irrigation_type,
           land_cover: parseFloat(crop.land_cover) || 1.0,
-        }))
+        })),
       };
 
       const processResponse = await axios.post('http://127.0.0.1:8080/crops/process', processPayload, {
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
+      // Display the results right here in this section!
       setProcessData(processResponse.data);
-      // Navigate to dam page with calculation results for step "Compare"
-      navigate(`/dam/${damId}`, { state: { processData: processResponse.data } });
-
     } catch (err) {
       setError(err);
       console.error('Error during water need calculation:', err);
     } finally {
-      setLoading(false);
+      setProcessing(false);
     }
   };
+
+  // Smooth auto-scroll down to the Water Demand vs Storage Balance section when calculation completes
+  useEffect(() => {
+    if (processData && balanceSectionRef.current) {
+      const timer = setTimeout(() => {
+        balanceSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [processData]);
 
   const handleAddCrop = () => {
     setCrops([...crops, { crop_type: 'wheat', irrigation_type: 'drip', land_cover: '1.0' }]);
@@ -86,53 +145,79 @@ const Cordinates = () => {
     setCrops(newCrops);
   };
 
+  const cropAnalysis = processData?.data;
+  const damLiveVolumeM3 = damInfo?.liveVolumeM3 || 5000000;
+  const cropWaterReq = cropAnalysis?.crop_water_requirement || 0;
+  const optimalUsage = cropAnalysis?.optimal_water_usage || 0;
+  const givenConfig = cropAnalysis?.water_given_config || 0;
+  const waterBalance = damLiveVolumeM3 - cropWaterReq;
+
   return (
-    <Box sx={{ width: '100%', minHeight: '100vh', paddingLeft: '23vw', paddingRight: '22vw', paddingTop: '2vw', paddingBottom: '4vw', boxSizing: 'border-box', bgcolor: '#F4F7F9' }}>
-      <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', bgcolor: '#FFFFFF', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', maxWidth: '900px', mx: 'auto' }}>
-        
+    <div className="page-wrapper">
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2.5, sm: 3.5 },
+          borderRadius: '16px',
+          bgcolor: '#FFFFFF',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 4px 20px rgba(27, 59, 111, 0.06)',
+          maxWidth: '1000px',
+          mx: 'auto',
+        }}
+      >
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Button startIcon={<ArrowBack />} onClick={() => navigate(`/dam/${damId}`)} sx={{ mr: 2, color: '#274C77' }}>
-            Back to Dam
+        <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2} sx={{ mb: 2 }}>
+          <Button
+            startIcon={<ArrowBack />}
+            onClick={() => navigate(`/dam/${damId}`)}
+            sx={{ color: '#1B3B6F', textTransform: 'none', fontWeight: 600 }}
+          >
+            Back to Dam Telemetry
           </Button>
           <Box>
-            <Chip label="Process Flow Step 3B & 4" color="primary" size="small" sx={{ bgcolor: '#274C77', fontWeight: 'bold', mb: 0.5 }} />
-            <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#274C77' }}>
+            <Chip
+              label="Hydrological Command Area"
+              size="small"
+              sx={{ bgcolor: 'rgba(39, 76, 119, 0.08)', color: '#274C77', fontWeight: 700, mb: 0.5, fontSize: '0.72rem' }}
+            />
+            <Typography variant="h4" sx={{ fontWeight: 800, color: '#1B3B6F', letterSpacing: '-0.5px' }}>
               Processing & Calculating Command Area
             </Typography>
           </Box>
-        </Box>
+        </Stack>
+
         <Divider sx={{ mb: 3 }} />
 
         {loading && !data ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-            <CircularProgress sx={{ color: '#274C77' }} />
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+            <CircularProgress sx={{ color: '#1B3B6F' }} />
           </Box>
         ) : (
           <>
             {/* Command Area Results */}
-            <Card variant="outlined" sx={{ borderRadius: '12px', mb: 4, bgcolor: '#FAFCFE', borderColor: '#CBD5E1' }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Agriculture sx={{ color: '#274C77', mr: 1 }} />
-                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#274C77' }}>
-                    Calculated Command Area
+            <Card variant="outlined" sx={{ borderRadius: '12px', mb: 3.5, bgcolor: '#F8FAFC', borderColor: '#E2E8F0' }}>
+              <CardContent sx={{ p: 2.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                  <Agriculture sx={{ color: '#1B3B6F', mr: 1 }} />
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1B3B6F' }}>
+                    Calculated Command Area Telemetry
                   </Typography>
                 </Box>
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                  Satellite hydrological area calculation result for Dam #{damId}
+                  Satellite hydrological area calculation result for {damInfo?.name || `Dam #${damId}`}
                 </Typography>
 
-                <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: '10px', bgcolor: '#FFFFFF', minWidth: '180px' }}>
-                    <Typography variant="caption" color="textSecondary">Command Area</Typography>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#274C77' }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                  <Paper variant="outlined" sx={{ p: 2, borderRadius: '10px', bgcolor: '#FFFFFF', borderColor: '#CBD5E1' }}>
+                    <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 600 }}>Command Area Extent</Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 800, color: '#1B3B6F', mt: 0.5 }}>
                       {data?.data?.area ? `${data.data.area} km²` : '250 km²'}
                     </Typography>
                   </Paper>
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: '10px', bgcolor: '#FFFFFF', minWidth: '180px' }}>
-                    <Typography variant="caption" color="textSecondary">Calculation Token</Typography>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#274C77' }}>
+                  <Paper variant="outlined" sx={{ p: 2, borderRadius: '10px', bgcolor: '#FFFFFF', borderColor: '#CBD5E1' }}>
+                    <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 600 }}>Calculation Token</Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 800, color: '#0284C7', mt: 0.5 }}>
                       #{data?.data?.token || '760'}
                     </Typography>
                   </Paper>
@@ -140,13 +225,13 @@ const Cordinates = () => {
               </CardContent>
             </Card>
 
-            {/* Step: Select Crop Type */}
+            {/* Select Crop Types & Parameters */}
             <Box sx={{ mb: 4 }}>
-              <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#274C77', mb: 1 }}>
-                Select Crop Type & Irrigation Parameters
+              <Typography variant="h6" sx={{ fontWeight: 800, color: '#1B3B6F', mb: 0.5 }}>
+                Select Crop Types & Irrigation Parameters
               </Typography>
-              <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-                Specify crops, land coverage, and irrigation methods to calculate total water requirement.
+              <Typography variant="body2" color="textSecondary" sx={{ mb: 2.5 }}>
+                Specify crop portfolio, target land fractions, and irrigation methods to calculate total water requirement.
               </Typography>
 
               <TextField
@@ -155,22 +240,34 @@ const Cordinates = () => {
                 type="number"
                 value={rain}
                 onChange={(e) => setRain(e.target.value)}
-                sx={{ mb: 3 }}
+                size="small"
+                helperText="Estimated seasonal precipitation"
+                sx={{ mb: 2.5 }}
               />
 
               {crops.map((crop, index) => (
-                <Paper key={index} variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: '12px', bgcolor: '#FFFFFF', position: 'relative' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Chip label={`Crop #${index + 1}`} size="small" sx={{ bgcolor: '#E2E8F0', fontWeight: 'bold' }} />
+                <Paper
+                  key={index}
+                  variant="outlined"
+                  sx={{
+                    p: 2.5,
+                    mb: 2,
+                    borderRadius: '12px',
+                    bgcolor: '#FFFFFF',
+                    borderColor: '#E2E8F0',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                    <Chip label={`Crop #${index + 1}`} size="small" sx={{ bgcolor: '#F1F5F9', fontWeight: 700, color: '#1B3B6F' }} />
                     {crops.length > 1 && (
                       <IconButton size="small" color="error" onClick={() => handleRemoveCrop(index)}>
-                        <Delete />
+                        <Delete fontSize="small" />
                       </IconButton>
                     )}
                   </Box>
 
-                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
-                    <FormControl fullWidth>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 2 }}>
+                    <FormControl fullWidth size="small">
                       <InputLabel id={`crop-label-${index}`}>Crop Type</InputLabel>
                       <Select
                         labelId={`crop-label-${index}`}
@@ -189,7 +286,7 @@ const Cordinates = () => {
                       </Select>
                     </FormControl>
 
-                    <FormControl fullWidth>
+                    <FormControl fullWidth size="small">
                       <InputLabel id={`irrigation-label-${index}`}>Irrigation Method</InputLabel>
                       <Select
                         labelId={`irrigation-label-${index}`}
@@ -205,10 +302,12 @@ const Cordinates = () => {
 
                     <TextField
                       fullWidth
-                      label="Land Cover Portion"
+                      size="small"
+                      label="Land Fraction"
                       type="number"
                       value={crop.land_cover}
                       onChange={(e) => handleChangeCrop(index, 'land_cover', e.target.value)}
+                      slotProps={{ htmlInput: { step: '0.1', min: '0.1' } }}
                     />
                   </Box>
                 </Paper>
@@ -218,30 +317,202 @@ const Cordinates = () => {
                 variant="outlined"
                 startIcon={<Add />}
                 onClick={handleAddCrop}
-                sx={{ mb: 3, color: '#274C77', borderColor: '#274C77' }}
+                sx={{
+                  color: '#1B3B6F',
+                  borderColor: '#CBD5E1',
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  mb: 3,
+                }}
               >
                 Add Another Crop
               </Button>
             </Box>
 
-            {/* Action Step: Find Water Need */}
-            <Box sx={{ textAlign: 'center', pt: 2, borderTop: '1px solid #E2E8F0' }}>
+            {/* Action Step Button */}
+            <Box sx={{ textAlign: 'center', pt: 2, pb: cropAnalysis ? 4 : 2, borderTop: '1px solid #E2E8F0' }}>
               <Button
                 variant="contained"
                 size="large"
-                startIcon={<WaterDrop />}
+                disabled={processing}
+                startIcon={processing ? <CircularProgress size={20} color="inherit" /> : <WaterDrop />}
                 onClick={handleProcessSubmit}
-                sx={{ bgcolor: '#274C77', '&:hover': { bgcolor: '#1D3859' }, px: 5, py: 1.5, borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold' }}
+                sx={{
+                  bgcolor: '#1B3B6F',
+                  '&:hover': { bgcolor: '#0B2545' },
+                  px: 5,
+                  py: 1.5,
+                  borderRadius: '10px',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  textTransform: 'none',
+                  boxShadow: '0 4px 14px rgba(27, 59, 111, 0.25)',
+                  width: { xs: '100%', sm: 'auto' },
+                }}
               >
-                Find Water Need & Compare
+                {processing ? 'Processing Demand...' : 'Find Water Need & Compare'}
               </Button>
             </Box>
+
+            {/* =========================================================================
+               WATER DEMAND VS. STORAGE CAPACITY BALANCE SECTION (RENDERED RIGHT HERE)
+               ========================================================================= */}
+            {cropAnalysis && (
+              <Box ref={balanceSectionRef} sx={{ mt: 2, pt: 3, borderTop: '2px solid #E2E8F0', scrollMarginTop: '80px' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box
+                    sx={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: '10px',
+                      bgcolor: 'rgba(2, 132, 199, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#0284C7',
+                      mr: 1.5,
+                    }}
+                  >
+                    <Compare fontSize="small" />
+                  </Box>
+                  <div>
+                    <Typography variant="h5" sx={{ fontWeight: 800, color: '#1B3B6F', lineHeight: 1.2 }}>
+                      Water Demand vs. Storage Capacity Balance
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      Comparison between command area crop requirements and available reservoir live storage
+                    </Typography>
+                  </div>
+                </Box>
+
+                <Divider sx={{ mb: 2.5 }} />
+
+                {/* 4 Comparative Metric Cards */}
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' },
+                    gap: 2,
+                    mb: 3,
+                  }}
+                >
+                  <Card variant="outlined" sx={{ borderRadius: '12px', bgcolor: '#F8FAFC', borderColor: '#E2E8F0' }}>
+                    <CardContent sx={{ p: 2 }}>
+                      <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 600 }}>
+                        Crop Water Requirement
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 800, color: '#1B3B6F', my: 0.5 }}>
+                        {cropWaterReq.toLocaleString(undefined, { maximumFractionDigits: 1 })} m³
+                      </Typography>
+                      <Chip label="Baseline Need" size="small" variant="outlined" sx={{ fontSize: '0.7rem', height: 20 }} />
+                    </CardContent>
+                  </Card>
+
+                  <Card variant="outlined" sx={{ borderRadius: '12px', bgcolor: '#F8FAFC', borderColor: '#E2E8F0' }}>
+                    <CardContent sx={{ p: 2 }}>
+                      <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 600 }}>
+                        Water (Current Config)
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 800, color: '#D97706', my: 0.5 }}>
+                        {givenConfig.toLocaleString(undefined, { maximumFractionDigits: 1 })} m³
+                      </Typography>
+                      <Chip label="Current Method" size="small" variant="outlined" color="warning" sx={{ fontSize: '0.7rem', height: 20 }} />
+                    </CardContent>
+                  </Card>
+
+                  <Card variant="outlined" sx={{ borderRadius: '12px', bgcolor: '#F8FAFC', borderColor: '#E2E8F0' }}>
+                    <CardContent sx={{ p: 2 }}>
+                      <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 600 }}>
+                        Optimal Water Usage
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 800, color: '#10B981', my: 0.5 }}>
+                        {optimalUsage.toLocaleString(undefined, { maximumFractionDigits: 1 })} m³
+                      </Typography>
+                      <Chip label="Drip / Precision" size="small" variant="outlined" color="success" sx={{ fontSize: '0.7rem', height: 20 }} />
+                    </CardContent>
+                  </Card>
+
+                  <Card variant="outlined" sx={{ borderRadius: '12px', bgcolor: '#F8FAFC', borderColor: '#E2E8F0' }}>
+                    <CardContent sx={{ p: 2 }}>
+                      <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 600 }}>
+                        Dam Available Storage
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 800, color: '#0284C7', my: 0.5 }}>
+                        {damLiveVolumeM3.toLocaleString(undefined, { maximumFractionDigits: 1 })} m³
+                      </Typography>
+                      <Chip
+                        icon={waterBalance >= 0 ? <CheckCircle sx={{ fontSize: '0.85rem !important' }} /> : <Warning sx={{ fontSize: '0.85rem !important' }} />}
+                        label={waterBalance >= 0 ? 'Storage Surplus' : 'Water Deficit'}
+                        size="small"
+                        color={waterBalance >= 0 ? 'success' : 'error'}
+                        sx={{ fontSize: '0.7rem', height: 20, fontWeight: 700 }}
+                      />
+                    </CardContent>
+                  </Card>
+                </Box>
+
+                {/* Comparative Visual Chart */}
+                <Box sx={{ p: 2, border: '1px solid #E2E8F0', borderRadius: '12px', bgcolor: '#FAFCFE', mb: 3 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1B3B6F', mb: 1 }}>
+                    Water Supply vs. Crop Demand Comparison (m³)
+                  </Typography>
+                  <Box sx={{ height: 280, width: '100%' }}>
+                    <BarChart
+                      xAxis={[{ scaleType: 'band', data: ['Dam Live Vol', 'Crop Baseline', 'Current Config', 'Optimal Efficiency'] }]}
+                      series={[
+                        {
+                          data: [
+                            damLiveVolumeM3,
+                            cropWaterReq > 0 ? cropWaterReq : damLiveVolumeM3 * 0.45,
+                            givenConfig > 0 ? givenConfig : damLiveVolumeM3 * 0.55,
+                            optimalUsage > 0 ? optimalUsage : damLiveVolumeM3 * 0.35,
+                          ],
+                          color: '#1B3B6F',
+                        },
+                      ]}
+                      height={260}
+                      margin={{ left: 80, right: 20, top: 20, bottom: 40 }}
+                    />
+                  </Box>
+                </Box>
+
+                {/* Optimization Recommendations */}
+                {cropAnalysis?.suggestions && (
+                  <Alert severity="info" sx={{ borderRadius: '12px', border: '1px solid #BAE6FD', mb: 3 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                      Irrigation Optimization Suggestions:
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 0.5 }}>
+                      {cropAnalysis.suggestions}
+                    </Typography>
+                  </Alert>
+                )}
+
+                {/* Back to Dam Navigation */}
+                <Box sx={{ textAlign: 'center', pt: 1 }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<ArrowBack />}
+                    onClick={() => navigate(`/dam/${damId}`)}
+                    sx={{
+                      color: '#1B3B6F',
+                      borderColor: '#CBD5E1',
+                      borderRadius: '8px',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Return to Dam Telemetry
+                  </Button>
+                </Box>
+              </Box>
+            )}
           </>
         )}
       </Paper>
-    </Box>
+    </div>
   );
 };
 
 export default Cordinates;
-
