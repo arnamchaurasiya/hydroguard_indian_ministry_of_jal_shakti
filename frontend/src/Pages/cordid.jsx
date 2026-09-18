@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../api/config';
 import {
   Box,
   Typography,
@@ -55,15 +56,15 @@ const Cordinates = () => {
     const handleLoad = async () => {
       try {
         setLoading(true);
-        const initResponse = await axios.post('http://127.0.0.1:8080/crops/init', {
+        const initResponse = await axios.post(`${API_BASE_URL}/crops/init`, {
           dam_id: Number(damId),
         });
         setData(initResponse.data);
 
         // Fetch dam volume & metadata for water balance comparison
         try {
-          const damResponse = await axios.get(`http://127.0.0.1:8080/dam/${damId}`);
-          const analysisResponse = await axios.get(`http://127.0.0.1:8080/dam/analysis/${damId}`);
+          const damResponse = await axios.get(`${API_BASE_URL}/dam/${damId}`);
+          const analysisResponse = await axios.get(`${API_BASE_URL}/dam/analysis/${damId}`);
           const volumes = analysisResponse.data?.data?.map((i) => i.live_volume);
           setDamInfo({
             name: damResponse.data?.data?.name,
@@ -103,7 +104,7 @@ const Cordinates = () => {
         })),
       };
 
-      const processResponse = await axios.post('http://127.0.0.1:8080/crops/process', processPayload, {
+      const processResponse = await axios.post(`${API_BASE_URL}/crops/process`, processPayload, {
         headers: {
           'Content-Type': 'application/json',
         },

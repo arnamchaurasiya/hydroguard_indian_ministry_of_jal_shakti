@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../api/config';
 import {
   Box,
   Typography,
@@ -47,7 +48,7 @@ const Cordinates = () => {
           })),
         };
 
-        const initResponse = await axios.post('http://127.0.0.1:8080/crops/init', payload, {
+        const initResponse = await axios.post(`${API_BASE_URL}/crops/init`, payload, {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -82,7 +83,7 @@ const Cordinates = () => {
         ],
       };
 
-      const processResponse = await axios.post('http://127.0.0.1:8080/crops/process', processPayload, {
+      const processResponse = await axios.post(`${API_BASE_URL}/crops/process`, processPayload, {
         headers: {
           'Content-Type': 'application/json',
         },

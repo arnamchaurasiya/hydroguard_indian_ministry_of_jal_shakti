@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../api/config';
 import {
   TextField,
   Button,
@@ -66,7 +67,7 @@ const CanalForm = () => {
     };
 
     try {
-      const response = await axios.post('http://127.0.0.1:8080/canal', dataToSend, {
+      const response = await axios.post(`${API_BASE_URL}/canal`, dataToSend, {
         headers: {
           'Content-Type': 'application/json',
         },

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../api/config";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Typography,
@@ -33,15 +34,15 @@ const Dam = () => {
   const handleLoad = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://127.0.0.1:8080/dam/${damId}`);
+      const response = await axios.get(`${API_BASE_URL}/dam/${damId}`);
       setDamData(response.data.data);
 
-      let res = await axios.get(`http://127.0.0.1:8080/dam/analysis/${damId}`);
+      let res = await axios.get(`${API_BASE_URL}/dam/analysis/${damId}`);
       let x = res.data.data.map((i) => i.water_cover);
 
       if (x.length === 0) {
-        await axios.post(`http://127.0.0.1:8080/dam/analysis/${damId}`);
-        res = await axios.get(`http://127.0.0.1:8080/dam/analysis/${damId}`);
+        await axios.post(`${API_BASE_URL}/dam/analysis/${damId}`);
+        res = await axios.get(`${API_BASE_URL}/dam/analysis/${damId}`);
         x = res.data.data.map((i) => i.water_cover);
       }
 

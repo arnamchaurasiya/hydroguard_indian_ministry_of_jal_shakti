@@ -9,6 +9,7 @@ import L from "leaflet";
 import "./gui.css";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../api/config";
 import {
   Box,
   Typography,
@@ -152,7 +153,7 @@ const Gui = () => {
   const fetchCoordinates = async () => {
     setFetchingDams(true);
     try {
-      const response = await axios.get("http://127.0.0.1:8080/dam");
+      const response = await axios.get(`${API_BASE_URL}/dam`);
 
       if (Array.isArray(response.data.data)) {
         const coords = response.data.data.map((dam) => ({

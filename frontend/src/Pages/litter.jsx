@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../api/config';
 import './litter.css';
 import { Paper, Typography, Box, Button, Chip } from '@mui/material';
 import { Videocam, CameraAlt } from '@mui/icons-material';
@@ -33,7 +34,7 @@ const Litter = () => {
       const imageData = canvas.toDataURL('image/png');
 
       try {
-        const response = await axios.post('http://localhost:8080/detect', { image: imageData }, {
+        const response = await axios.post(`${API_BASE_URL}/detect`, { image: imageData }, {
           responseType: 'blob',
         });
 
