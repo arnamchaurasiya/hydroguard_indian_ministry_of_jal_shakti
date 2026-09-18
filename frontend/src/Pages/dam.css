@@ -1,0 +1,40 @@
+.cont {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.Boxy {
+  display: flex;
+  justify-content: flex-start;
+  gap: 20px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.dam-box {
+  background-color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.dam-box:hover {
+  background-color: #F0F4F8;
+}
+
+.dam-box .typography-title {
+  font-weight: 600;
+  color: #274C77;
+  margin-bottom: 2px;
+  font-size: 15px;
+}
+
+.dam-box .typography-content {
+  font-size: 14px;
+  color: #334155;
+  margin-bottom: 8px;
+}

@@ -1,0 +1,30 @@
+.bgmap {
+  min-height: 100vh;
+  width: 100vw;
+  box-sizing: border-box;
+  padding-left: 23vw;
+  padding-right: 22vw;
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
+.map {
+  height: calc(100vh - 30px);
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.ind {
+  fill: rgb(51, 26, 109); 
+  fill-opacity: 1;
+  stroke: rgb(51, 26, 109); 
+  stroke-width: 4; 
+}
+
+.states {
+  fill: rgb(51, 26, 109);
+  stroke: white;
+  stroke-width: 1;
+}

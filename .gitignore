@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+vendor/
+venv/
+env/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Build outputs & executables
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+*.bin
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*gen-lang-client*.json
+key.json
+
+# Local runtime data & containers
+.data/
+.rabbitmq/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
