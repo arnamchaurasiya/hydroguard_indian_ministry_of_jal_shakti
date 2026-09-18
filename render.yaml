@@ -18,4 +18,4 @@ databases:
     plan: free
     region: oregon
     databaseName: hydroguard
-    user: postgres
+    user: hydroguard_user
